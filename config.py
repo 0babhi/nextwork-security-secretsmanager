@@ -1,33 +1,16 @@
-import boto3
-import json
-from botocore.exceptions import ClientError
-
+import botocore  
+import botocore.session  
+from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
 
 def get_secret():
 
-    secret_name = "aws-access-key."
-    region_name = "us-east-1"
+    client = botocore.session.get_session().create_client('secretsmanager')
+    cache_config = SecretCacheConfig()
+    cache = SecretCache(config=cache_config, client=client)
 
-    # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name
-    )
+    secret = cache.get_secret_string('aws-access-key')
 
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
-    except ClientError as e:
-        # For a list of exceptions thrown, see
-        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-        raise e
-
-    secret = get_secret_value_response['SecretString']
-
-    # Your code goes here.
-return json.loads(secret)
+    return json.loads(secret)
 # Retrieve credentials from Secrets Manager
 credentials = get_secret()
 # Extract the values; if AWS_REGION isn't in the secret, use the region from the session
